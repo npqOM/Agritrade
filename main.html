@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>AgriTrade Exchange</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+transition:0.3s;
+}
+
+.dark{
+background:#0b0f19;
+color:white;
+}
+
+.light{
+background:#f4f6fb;
+color:black;
+}
+
+h1,h2,h3{
+text-align:center;
+}
+
+header{
+padding:15px;
+font-size:22px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.tabs{
+display:flex;
+justify-content:center;
+gap:10px;
+padding:10px;
+}
+
+.tabs button{
+padding:8px 15px;
+border:none;
+cursor:pointer;
+border-radius:5px;
+}
+
+.tab{
+display:none;
+padding:20px;
+}
+
+.active{
+display:block;
+}
+
+.market{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:20px;
+}
+
+.card{
+padding:15px;
+border-radius:8px;
+background:#1e222d;
+color:white;
+text-align:center;
+}
+
+.light .card{
+background:white;
+color:black;
+border:1px solid #ddd;
+}
+
+button.buy{
+background:#28a745;
+color:white;
+margin:5px;
+}
+
+button.sell{
+background:#dc3545;
+color:white;
+margin:5px;
+}
+
+.center{
+text-align:center;
+}
+
+input{
+padding:8px;
+margin:5px;
+}
+
+#loginPage,#signupPage{
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:100vh;
+}
+
+#signupPage{
+display:none;
+}
+
+#dashboard{
+display:none;
+}
+
+.transactions{
+max-width:600px;
+margin:auto;
+border-top:1px solid gray;
+padding-top:10px;
+}
+
+</style>
+
+</head>
+
+<body class="dark">
+
+<!-- LOGIN PAGE -->
+
+<div id="loginPage">
+
+<h1>AgriTrade Exchange 🌾</h1>
+
+<input placeholder="Username">
+
+<input type="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+<button onclick="openSignup()">Sign Up</button>
+
+</div>
+
+
+<!-- SIGNUP PAGE -->
+
+<div id="signupPage">
+
+<h1>Create Account</h1>
+
+<input placeholder="Username">
+
+<input placeholder="Email">
+
+<input type="password" placeholder="Password">
+
+<button onclick="signup()">Create Account</button>
+
+<button onclick="backToLogin()">Back</button>
+
+</div>
+
+
+<!-- DASHBOARD -->
+
+<div id="dashboard">
+
+<header>
+
+AgriTrade Exchange
+
+<button onclick="toggleTheme()">Toggle Theme</button>
+
+</header>
+
+<div class="tabs">
+
+<button onclick="openTab('market')">Market</button>
+<button onclick="openTab('farmer')">Farmer Listing</button>
+<button onclick="openTab('analytics')">Sales Analytics</button>
+<button onclick="openTab('wallet')">Wallet</button>
+<button onclick="openTab('transactions')">Transactions</button>
+
+</div>
+
+
+<!-- MARKET -->
+
+<div id="market" class="tab active">
+
+<h2>Crop Market</h2>
+
+<h3>Wallet Balance: ₹<span id="balance">5000</span></h3>
+
+<div class="market" id="marketArea"></div>
+
+</div>
+
+
+<!-- FARMER -->
+
+<div id="farmer" class="tab">
+
+<h2>List Your Crop</h2>
+
+<div class="center">
+
+<input id="cropName" placeholder="Crop Name">
+<input id="cropPrice" placeholder="Selling Price">
+<input id="cropQty" placeholder="Quantity">
+
+<br>
+
+<button onclick="addCrop()">List Crop</button>
+
+</div>
+
+</div>
+
+
+<!-- ANALYTICS -->
+
+<div id="analytics" class="tab">
+
+<h2>Sales Analytics</h2>
+
+<canvas id="chart"></canvas>
+
+</div>
+
+
+<!-- WALLET -->
+
+<div id="wallet" class="tab">
+
+<h2>Wallet</h2>
+
+<h3>Current Balance: ₹<span id="walletBalance">5000</span></h3>
+
+<div class="center">
+
+<input id="addMoney" placeholder="Amount">
+
+<button onclick="addMoney()">Add Money</button>
+
+</div>
+
+</div>
+
+
+<!-- TRANSACTIONS -->
+
+<div id="transactions" class="tab">
+
+<h2>Transaction History</h2>
+
+<div id="transactionLog" class="transactions"></div>
+
+</div>
+
+</div>
+
+
+<script>
+
+let balance=5000
+
+let crops=[
+{name:"Wheat",price:2000,qty:100},
+{name:"Rice",price:1800,qty:120},
+{name:"Cotton",price:5000,qty:70}
+]
+
+let sales=[]
+
+
+function login(){
+
+document.getElementById("loginPage").style.display="none"
+document.getElementById("dashboard").style.display="block"
+
+}
+
+function openSignup(){
+
+document.getElementById("loginPage").style.display="none"
+document.getElementById("signupPage").style.display="flex"
+
+}
+
+function signup(){
+
+document.getElementById("signupPage").style.display="none"
+document.getElementById("dashboard").style.display="block"
+
+}
+
+function backToLogin(){
+
+document.getElementById("signupPage").style.display="none"
+document.getElementById("loginPage").style.display="flex"
+
+}
+
+
+function openTab(id){
+
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
+
+document.getElementById(id).classList.add("active")
+
+}
+
+
+function renderMarket(){
+
+let area=document.getElementById("marketArea")
+
+area.innerHTML=""
+
+crops.forEach((c,i)=>{
+
+let card=document.createElement("div")
+
+card.className="card"
+
+card.innerHTML=`
+
+<h3>${c.name}</h3>
+
+<p>Price: ₹${c.price}</p>
+
+<p>Stock: ${c.qty}</p>
+
+<button class="buy" onclick="buy(${i})">Buy</button>
+<button class="sell" onclick="sell(${i})">Sell</button>
+
+`
+
+area.appendChild(card)
+
+})
+
+}
+
+
+function buy(i){
+
+if(balance<crops[i].price){
+
+alert("Insufficient balance")
+return
+
+}
+
+balance-=crops[i].price
+crops[i].qty--
+
+sales.push(crops[i].price)
+
+updateWallet()
+
+updateChart()
+
+log("Bought "+crops[i].name+" for ₹"+crops[i].price)
+
+renderMarket()
+
+}
+
+
+function sell(i){
+
+balance+=crops[i].price
+
+crops[i].qty++
+
+updateWallet()
+
+log("Sold "+crops[i].name+" for ₹"+crops[i].price)
+
+renderMarket()
+
+}
+
+
+function log(t){
+
+let box=document.getElementById("transactionLog")
+
+box.innerHTML+=t+"<br>"
+
+}
+
+
+function addCrop(){
+
+let name=document.getElementById("cropName").value
+let price=parseInt(document.getElementById("cropPrice").value)
+let qty=parseInt(document.getElementById("cropQty").value)
+
+crops.push({name:name,price:price,qty:qty})
+
+renderMarket()
+
+}
+
+
+function toggleTheme(){
+
+document.body.classList.toggle("dark")
+document.body.classList.toggle("light")
+
+}
+
+
+function addMoney(){
+
+let amount=parseInt(document.getElementById("addMoney").value)
+
+balance+=amount
+
+updateWallet()
+
+}
+
+
+function updateWallet(){
+
+document.getElementById("balance").innerText=balance
+document.getElementById("walletBalance").innerText=balance
+
+}
+
+
+let chart=new Chart(document.getElementById("chart"),{
+
+type:"line",
+
+data:{
+labels:[],
+datasets:[{
+label:"Sales Price",
+data:[],
+borderColor:"green"
+}]
+}
+
+})
+
+
+function updateChart(){
+
+chart.data.labels.push("Sale")
+chart.data.datasets[0].data.push(sales[sales.length-1])
+
+chart.update()
+
+}
+
+
+renderMarket()
+updateWallet()
+
+</script>
+
+</body>
+
+</html>
